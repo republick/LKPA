@@ -91,43 +91,43 @@
 &emsp;&emsp;Linux系统中，用户在程序中可以通过调用fork 系统调用来创建进程。调用进程叫父进程（parent）,被创建的进程叫子进程（child）。现在举一个简单的C程序forktest.c，说明进程的创建及进程的并发执行。
 
 
-    #include <sys/types.h>	/* 提供类型pid_t的定义,在PC机上与int型相同 */
-    #include <unistd.h>	/* 提供系统调用的定义 */
-    #include <stdio.h>	/* 提供基本输入输出函数，如printf */
+	#include <sys/types.h>
+	#include <unistd.h>
+	#include <stdio.h>
 
-    void do_something(long t)
-    {
-	    int i = 0;
-	    for (i = 0; i < t; i++)
-		    for (i = 0; i < t; i++)
-			    for (i = 0; i < t; i++)
-				    ;
-    }
-    int main()
-    {       
-	   pid_t pid;
-    
-	    /*此时仅有一个进程*/
-	    printf("PID before fork():%d\n", getpid());
-	    pid = fork();
+	void do_something(long t)
+	{
+		int i = 0;
+		for(i = 0; i < t; i++)
+			for(i = 0; i < t; i++)
+				for(i = 0; i < t; i++)
+				;
+	}
 
-	    /*此时已经有两个进程在同时运行*/
-	    pid_t npid = getpid();
-	    if (pid < 0 )
-		    perror("fork error\n");
-	    else if (pid == 0) { /*pid == 0 表示子进程*/
-		    while (1) {
-			    printf("I am child process, PID is %d\n", npid);
-			    do_something(10000000);
-		    }
-	    } else if (pid >= 0) { /*pid > 0 表示父进程*/
-		    while (1) {
-			    printf("I am father process, PID is %d\n", npid);
-			    do_something(10000000);
-		    }
-	    }
-	    return 0;
-    }
+	int main()
+	{
+		pid_t pid;
+	
+		printf("PID before fork(): %d\n", getpid());
+		pid=fork();
+	
+		pid_t npid = getpid();
+		if(pid < 0)
+			perror("fork error\n");
+		else if(pid == 0) {
+			while(1) {
+				printf(“I am child process, PID is %d\n”, getpid());
+				do_something(10000000);
+			}
+		}
+		else if(pid > 0) {
+			while(1) {
+				printf("I am father process, PID is %d\n", getpid());
+				do_something(10000000);
+			}
+		}
+		return 0;
+	}
 
 &emsp;&emsp;在Linux运行的每个进程都有一个唯一的进程标识符PID（Process Identifier）。从进程ID的名字就可以看出，它就是进程的身份证号码，每个人的身份证号码都不会相同，每个进程的进程ID也不会相同。系统调用getpid()就是获得进程标识符。pid_t是用于定义进程PID的一个类型，而实际上就是int型的。
 
