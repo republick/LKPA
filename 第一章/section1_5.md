@@ -16,18 +16,20 @@
       #include <linux/kernel.h>
       #include <linux/init.h>
 
-      static int __init lkp_init( void )
-    {  
-     printk("<1>Hello,World! from the kernel space...\n");  
-     return 0;
-    } 
+      static int __init lkp_init(void)
+      {
+	      printk("<1>Hello, World! from the kernel space...\n");
+	      return 0;
+      }
 
-    static void __exit lkp_cleanup( void )
-    {  
-     printk("<1>Goodbye, World! leaving kernel space...\n");  } 
-     module_init(lkp_init);
-     module_exit(lkp_cleanup);
-     MODULE_LICENSE("GPL");
+      static void __exit lkp_exit(void)
+      {
+	      printk("<1>Goodbye, World! leaving kernel space...\n");
+      }
+
+      module_init(lkp_init);
+      module_exit(lkp_exit);
+      MODULE_LICENSE("GPL");
 
 **2．说明**
 
@@ -45,15 +47,15 @@
 
 &emsp;&emsp;假定我们给前面的程序起名为“hellomod.c”，只有超级用户才能加载和卸载模块。对于2.6内核的模块，其Makefile文件的基本内容如下：
 
-     # Makefile2.6
-     obj-m += hellomod.o        # 产生hellomod 模块的目标文件
-     CURRENT_PATH := $(shell pwd)   #模块所在的当前路径
-     LINUX_KERNEL := $(shell uname -r)    #Linux内核源代码的当前版本
-     LINUX_KERNEL_PATH := /usr/src/linux-headers-$(LINUX_KERNEL) #Linux内核源代码的绝对路径
-    all:
-      make -C $(LINUX_KERNEL_PATH) M=$(CURRENT_PATH) modules   #编译模块
-    clean:
-      make -C $(LINUX_KERNEL_PATH) M=$(CURRENT_PATH) clean    #清理
+     #Makefile3.10
+     obj-m := hellomod.o                                          #产生hellomod 模块的目标文件
+     CURRENT_PATH := $(shell pwd)                                 #模块所在的当前路径
+     LINUX_KERNEL := $(shell uname -r)                            #Linux内核源代码的当前版本
+     LINUX_KERNEL_PATH := /usr/src/kernels/$(LINUX_KERNEL)        #Linux内核源代码的绝对路径
+     all:
+         make -C $(LINUX_KERNEL_PATH) M=$(CURRENT_PATH) modules   #编译模块
+     clean:
+         make -C $(LINUX_KERNEL_PATH) M=$(CURRENT_PATH) clean     #清理
   
 &emsp;&emsp;上面的Makefile中使用了 obj-m := 这个赋值语句，其含义说明要使用目标文件hellomod.o建立一个模块，最后生成的模块名是helloworld.ko，如果你有一个名为module.ko的模块依赖于两个文件 file1.o和file2.o，那么我们可以使用module-obj扩展，如下所示
  
