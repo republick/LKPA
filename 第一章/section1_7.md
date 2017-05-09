@@ -37,11 +37,11 @@
  
 &emsp;&emsp;在此，进一步说明几点：
 
-1）list域隐藏了链表的指针特性。
+&emsp;&emsp;1）list域隐藏了链表的指针特性。
 
-2）struct list_head可以位于结构的任何位置，可以给其起任何名字
+&emsp;&emsp;2）struct list_head可以位于结构的任何位置，可以给其起任何名字
 
-3）在一个结构中可以有多个list 域
+&emsp;&emsp;3）在一个结构中可以有多个list 域
 
 &emsp;&emsp;以struct list_head为基本对象，对链表进行插入、删除、合并以及遍历等各种操作。
 
@@ -140,71 +140,71 @@
 
 &emsp;&emsp;下面编写一个linux 内核模块，用以创建、增加、删除和遍历一个双向链表。
 
-    #include <linux/kernel.h>
-    #include <linux/module.h>
-    #include <linux/slab.h>
-    #include <linux/list.h>
+	#include <linux/kernel.h>
+	#include <linux/module.h>
+	#include <linux/slab.h>
+	#include <linux/list.h>
 
-    MODULE_LICENSE("GPL");
-    MODULE_AUTHOR("XIYOU");
+	MODULE_LICENSE("GPL");
+	MODULE_AUTHOR("XIYOU");
 
-    #define N 10   //链表节点
-    struct numlist {
-	  int num;//数据
-	  struct list_head list;//指向双联表前后节点的指针
-    };
+	#define N 10   //链表节点
+	struct numlist {
+		int num;//数据
+		struct list_head list;//指向双联表前后节点的指针
+	};
 
-    struct numlist numhead;//头节点
+	struct numlist numhead;//头节点
 
-    static int __init doublelist_init(void)
-    {
-	//初始化头节点
-	struct numlist *listnode;//每次申请链表节点时所用的指针
-	struct list_head *pos;
-	struct numlist *p;
-	int i;
+	static int __init doublelist_init(void)
+	{
+		//初始化头节点
+		struct numlist *listnode;//每次申请链表节点时所用的指针
+		struct list_head *pos;
+		struct numlist *p;
+		int i;
 
-	printk("doublelist is starting...\n");
-	INIT_LIST_HEAD(&numhead.list);
+		printk("doublelist is starting...\n");
+		INIT_LIST_HEAD(&numhead.list);
 
-	//建立N个节点，依次加入到链表当中
-	for (i = 0; i < N; i++) {
-		listnode = (struct numlist *)kmalloc(sizeof(struct numlist), GFP_KERNEL); // kmalloc（）在内核空间申请内存，类似于malloc,参见第四章
-		listnode->num = i+1;
-		list_add_tail(&listnode->list, &numhead.list);
-		printk("Node %d has added to the doublelist...\n", i+1);
-	}
+		//建立N个节点，依次加入到链表当中
+		for (i = 0; i < N; i++) {
+			listnode = (struct numlist *)kmalloc(sizeof(struct numlist), GFP_KERNEL); // kmalloc（）在内核空间申请内存，类似于malloc,参见第四章
+			listnode->num = i+1;
+			list_add_tail(&listnode->list, &numhead.list);
+			printk("Node %d has added to the doublelist...\n", i+1);
+		}
 
-	//遍历链表
-	i = 1;
-	list_for_each(pos, &numhead.list) {
-		p = list_entry(pos, struct numlist, list);
-		printk("Node %d's data:%d\n", i, p->num);
-		i++;
-	}
+		//遍历链表
+		i = 1;
+		list_for_each(pos, &numhead.list) {
+			p = list_entry(pos, struct numlist, list);
+			printk("Node %d's data:%d\n", i, p->num);
+			i++;
+		}
 	
-	return 0;
-    }
-
-    static void __exit doublelist_exit(void)
-    {
-	struct list_head *pos, *n;
-	struct numlist *p;
-	int i;
-	
-	//依次删除N个节点
-	i = 1;
-	list_for_each_safe(pos, n, &numhead.list) {  //为了安全删除节点而进行的遍历
-		list_del(pos);//从双链表中删除当前节点
-		p = list_entry(pos, struct numlist, list);//得到当前数据节点的首地址，即指针
-		kfree(p);//释放该数据节点所占空间
-		printk("Node %d has removed from the doublelist...\n", i++);
+		return 0;
 	}
-	printk("doublelist is exiting..\n");
-    }
 
-    module_init(doublelist_init);
-    module_exit(doublelist_exit);
+	static void __exit doublelist_exit(void)
+	{
+		struct list_head *pos, *n;
+		struct numlist *p;
+		int i;
+	
+		//依次删除N个节点
+		i = 1;
+		list_for_each_safe(pos, n, &numhead.list) {  //为了安全删除节点而进行的遍历
+			list_del(pos);//从双链表中删除当前节点
+			p = list_entry(pos, struct numlist, list);//得到当前数据节点的首地址，即指针
+			kfree(p);//释放该数据节点所占空间
+			printk("Node %d has removed from the doublelist...\n", i++);
+		}
+		printk("doublelist is exiting..\n");
+    	}
+
+	module_init(doublelist_init);
+	module_exit(doublelist_exit);
 
 &emsp;&emsp;说明：关于删除元素的安全性问题
 
