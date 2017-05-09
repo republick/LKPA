@@ -36,7 +36,7 @@
     
 &emsp;&emsp;例如： 在Intel中，`mov	eax,[ebx+5]`
 
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;在AT&T，`movl	5(%ebx),%eax`
+&emsp;&emsp;&emsp;&emsp;&emsp;在AT&T，`movl	5(%ebx),%eax`
 
 **4．操作码的后缀**
 
