@@ -73,7 +73,7 @@
 
 &emsp;&emsp;然后，可以用lsmod命令检查模块是否正确插入到内核中了：
 
-&emsp;&emsp;模块的输出由printk（）来产生。该函数默认打印系统文件/var/log/messages的内容。快速浏览这些消息可输入如下命令：
+&emsp;&emsp;模块的输出由printk()来产生。该函数默认打印系统文件/var/log/messages的内容。快速浏览这些消息可输入如下命令：
 
 	tail /var/log/messages
 
