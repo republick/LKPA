@@ -6,11 +6,11 @@
 
 &emsp;&emsp;在C 语言中，一个基本的双向链表定义如下：
 
-    struct my_list{ 
-	void *mydata; 
-	struct my_list *next;
-	struct my_list *prev;
-	}; 
+	struct my_list {
+		void *mydata;
+		struct my_list *next;
+		struct my_list *prev;
+	}
 
 ![](http://i.imgur.com/d3wmDTM.png)
    
@@ -24,24 +24,24 @@
 
 **1. 链表的定义**
 
-    struct list_head {                     
-    struct list_head *next, *prev;  
-    };     
+	struct list_head {
+		struct list_head *next, *prev;
+	};   
                                            
 &emsp;&emsp;这个不含数据域的链表，可以嵌入到任何结构中，例如可以按如下方式定义含有数据域的链表： 
 
-    struct my_list{ 
-	void *mydata; 
-	struct list_head list;
+	struct my_list{ 
+		void *mydata; 
+		struct list_head list;
 	};  
  
 &emsp;&emsp;在此，进一步说明几点：
 
-1） list域隐藏了链表的指针特性。
+1）list域隐藏了链表的指针特性。
 
-2）	 struct list_head可以位于结构的任何位置，可以给其起任何名字
+2）struct list_head可以位于结构的任何位置，可以给其起任何名字
 
-3）	在一个结构中可以有多个list 域
+3）在一个结构中可以有多个list 域
 
 &emsp;&emsp;以struct list_head为基本对象，对链表进行插入、删除、合并以及遍历等各种操作。
 
@@ -49,50 +49,52 @@
 
 &emsp;&emsp;实际上， struct list_head只定义了链表节点，并没有专门定义链表头，那么一个链表结构是如何建立起来的？内核代码list.h中定义了两个宏：
 
-    #define LIST_HEAD_INIT(name) { &(name), &(name) } /*仅初始化*/
-    #define LIST_HEAD(name) struct list_head name = LIST_HEAD_INIT(name) /*声明并初始化*/
+	#define LIST_HEAD_INIT(name) { &(name), &(name) }	/*仅初始化*/
+	
+	#define LIST_HEAD(name) \
+		struct list_head name = LIST_HEAD_INIT(name)    /*声明并初始化*/
 
 &emsp;&emsp;如果我们要申明并初始化自己的链表头mylist，则直接调用LIST_HEAD：
 
-    LIST_HEAD(mylist_head)
+	LIST_HEAD(mylist_head)
 
 &emsp;&emsp;调用之后，mylist\_head的next、prev指针都初始化为指向自己，这样，我们就有了一个空链表，如何判断链表是否为空，自己写一下这个简单的函数list_empty ，也就是让头指针的next指向自己。
 
 
 **3 在链表中增加一个结点**
 
-   list.h中增加节点的函数为：
+&emsp;&emsp;list.h中增加节点的函数为：
 
-     static inline void __list_add();
-     static inline void list_add();
-     static inline void list_add_tail();
+	static inline void __list_add();
+	static inline void list_add();
+	static inline void list_add_tail();
 
 &emsp;&emsp;在内核代码中，函数名前加两个下划线表示内部函数，第一个函数的具体代码如下：
 
-    static inline void __list_add(struct list_head *new,
-              struct list_head *prev,
-              struct list_head *next)
-    {
-      next->prev = new;
-      new->next = next;
-      new->prev = prev;
-      prev->next = new;
-    }
+	static inline void __list_add(struct list_head *new,
+			      struct list_head *prev,
+			      struct list_head *next)
+	{
+		next->prev = new;
+		new->next = next;
+		new->prev = prev;
+		prev->next = new;
+	}
 
 &emsp;&emsp;调用这个内部函数以分别在链表头和尾增加节点：
 
-    static inline void list_add(struct list_head *new, struct list_head *head)
-    {
-    __list_add(new, head, head->next);
-    }
+	static inline void list_add(struct list_head *new, struct list_head *head)
+	{
+		__list_add(new, head, head->next);
+	}
 
 &emsp;&emsp;该函数向指定链表的head节点后插入new节点。因为链表是循环的，而且通常没有首尾节点的概念，所以可以将任何节点传递给head。但是如果传递最后一个元素传给head，那么该函数可以用来实现一个栈。
 
 
-    static inline void list_add_tail(struct list_head *new, struct list_head *head)
-    {
-    __list_add(new, head->prev, head);
-    }
+	static inline void list_add_tail(struct list_head *new, struct list_head *head)
+	{
+		__list_add(new, head->prev, head);
+	}
 
 
 &emsp;&emsp;该函数向指定链表的head节点前插入new节点。和list_add()函数类似，因为链表是环形的，而且可以将任何节点传递给head。但是如果传递第一个元素给head那么，该函数可以用来实现一个队列。
@@ -106,9 +108,8 @@
 
 &emsp;&emsp;list.h中定义了如下遍历链表本的宏：
 
-    #define list_for_each(pos, head) \
-      for (pos = (head)->next; pos != (head); \
-            pos = pos->next)  
+	#define list_for_each(pos, head) \
+		for (pos = (head)->next; pos != (head); pos = pos->next)
 
 &emsp;&emsp;这种遍历仅仅是找到一个个节点在链表中的偏移位置pos，如图1.7所示。
 
@@ -116,8 +117,9 @@
 
 &emsp;&emsp;问题在于，如何通过pos获得节点的起始地址，从而可以引用节点中的域？ 于是 list.h中定义了晦涩难懂的list_entry（）宏：
 
-    #define list_entry(ptr, type, member) \
-    ((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+	#define list_entry(ptr, type, member) \
+		container_of(ptr, type, member)
+
 
 
 &emsp;&emsp;指针ptr指向结构体type中的成员member；通过指针ptr，返回结构体type的起始地址，也就是list_entry返回指向type类型的指针，如图1.8所示。
@@ -204,29 +206,29 @@
     module_init(doublelist_init);
     module_exit(doublelist_exit);
 
-&emsp;&emsp;说明： 关于删除元素的安全性问题
+&emsp;&emsp;说明：关于删除元素的安全性问题
 
 &emsp;&emsp;在上面的代码中，为什么不调用list\_for\_each（）宏而调用 list\_for\_each_safe（）进行删除前的遍历？具体看删除函数的源代码：
 
-    static inline void __list_del(struct list_head * prev, struct list_head * next)
-    {
-        next->prev = prev;
-        prev->next = next;
-    }
-    static inline void list_del(struct list_head *entry)
-    {
-        __list_del(entry->prev, entry->next);
-        entry->next = LIST_POISON1;
-        entry->prev = LIST_POISON2;
-    }
+	static inline void __list_del(struct list_head * prev, struct list_head * next)
+	{
+		next->prev = prev;
+		prev->next = next;
+	}
+
+	static inline void list_del(struct list_head *entry)
+	{
+		__list_del(entry->prev, entry->next);
+		entry->next = LIST_POISON1;
+		entry->prev = LIST_POISON2;
+	}
 
 &emsp;&emsp;可以看出，当执行删除操作的时候， 被删除的节点的两个指针被指向一个固定的位置（LIST\_POISON1和LIST\_POISON2是内核空间的两个地址）。而list\_for\_each(pos, head)中的pos指针在遍历过程中向后移动，即pos = pos->next，如果执行了list\_del()操作，pos将指向这个固定位置的next, prev,而此时的next, prev没有任何指向了，必然出错。
 
 &emsp;&emsp;而list\_for\_each_safe(p, n, head) 宏解决了上面的问题：
 
-     #define list_for_each_safe(pos, n, head) \
-     for (pos = (head)->next, n = pos->next; pos != (head); \
-      pos = n, n = pos->next)
+	#define list_for_each(pos, head) \
+		for (pos = (head)->next; pos != (head); pos = pos->next)
 
 &emsp;&emsp;它采用了一个同pos同样类型的指针n 来暂存将要被删除的节点指针pos，从而使得删除操作不影响pos指针！ 
 
